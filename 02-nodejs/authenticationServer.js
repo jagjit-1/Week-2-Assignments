@@ -32,6 +32,54 @@
 const express = require("express")
 const PORT = 3000;
 const app = express();
+app.use(express.json());
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
+const data = [];
+
+app.post("/signup", (req, res) => {
+  const { username, password, firstName, lastName,email } = req.body;
+  if (data.find((user) => user.username === username)) return res.status(400).send("Username Already Exists");
+  const newUser = {
+    username,
+    password,
+    firstName,
+    lastName,
+    email
+  }
+  data.push(newUser);
+  res.status(201).send("Signup successful");
+})
+
+
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  const userFound = data.find((user) => user.username === username && user.password === password);
+  if (userFound) {
+    return res.status(200).json({
+      firstName: userFound.firstName,
+      lastName: userFound.lastName,
+      email: userFound.email
+    })
+  }
+  res.status(401).send("No user found")
+})
+
+app.get("/data", (req, res) => {
+  const { username, password } = req.headers;
+  const userFound = data.find((user) => user.username === username && user.password === password);
+  if (!userFound) return res.status(401).send("Unauthorized");
+  const users = data.map((user) => {
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }
+  });
+  res.status(200).json({users})
+})
+
+app.use("*",(req,res)=>{
+  res.status(404).send("Route Not Found")
+})
 
 module.exports = app;

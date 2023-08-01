@@ -41,9 +41,89 @@
  */
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require("path")
+const fs = require("fs");
 
 const app = express();
 
 app.use(bodyParser.json());
+
+
+app.get('/todos', (req, res) => {
+  fs.readFile(path.join(__dirname, "/data.json"), 'utf8', (err, data) => {
+    if (err) return res.sendStatus(500);
+    let todos = []
+    if (data.trim() !== "") todos = JSON.parse(data);
+    return res.status(200).send(todos);
+  })
+})
+
+app.get('/todos/:id', (req, res) => {
+  fs.readFile(path.join(__dirname, "/data.json"), 'utf8', (err, data) => {
+    if (err) return res.sendStatus(500);
+    let todos = []
+    if (data.trim() !== "") todos = JSON.parse(data);
+    const idx = todos.findIndex((todo) => todo.id == req.params.id);
+    if (idx === -1) return res.status(404).send("Not Found");
+    else return res.status(200).send(todos[idx]);
+  })
+})
+
+app.post('/todos', (req, res) => {
+  const { title, completed, description } = req.body;
+  fs.readFile(path.join(__dirname, "/data.json"), 'utf8', (err, data) => {
+    if (err) return res.sendStatus(500);
+    console.log(data);
+    let todos = []
+    if (data.trim() !== "") todos = JSON.parse(data);
+    const newTodo = {
+      id: Math.floor(Math.random() * 1000000),
+      title,
+      completed,
+      description
+    };
+    todos.push(newTodo);
+    fs.writeFile(path.join(__dirname, "/data.json"), JSON.stringify(todos), (err) => {
+      if (err) return res.sendStatus(500);
+      return res.status(201).json(newTodo);
+    })
+  })
+});
+
+app.put('/todos/:id', (req, res) => {
+  fs.readFile(path.join(__dirname, "/data.json"), 'utf8', (err, data) => {
+    if (err) return res.sendStatus(500);
+    let todos = []
+    if (data.trim() !== "") todos = JSON.parse(data);
+    const idx = todos.findIndex((todo) => todo.id == req.params.id);
+    if (idx === -1) return res.sendStatus(404);
+    todos[idx].title = req.body.title;
+    todos[idx].description = req.body.description;
+    fs.writeFile(path.join(__dirname, "/data.json"), JSON.stringify(todos), (err) => {
+      if (err) return res.sendStatus(500);
+      return res.status(200).json(todos[idx]);
+    })
+  })
+})
+
+app.delete('/todos/:id', (req, res) => {
+  fs.readFile(path.join(__dirname, "/data.json"), 'utf8', (err, data) => {
+    if (err) return res.sendStatus(500);
+    let todos = []
+    if (data.trim() !== "") todos = JSON.parse(data);
+    const idx = todos.findIndex((todo) => todo.id == req.params.id);
+    if (idx === -1) return res.sendStatus(404);
+    todos.splice(idx, 1);
+    fs.writeFile(path.join(__dirname, "/data.json"), JSON.stringify(todos), (err) => {
+      if (err) return res.sendStatus(500);
+      return res.sendStatus(200);
+    })
+  })
+})
+
+app.use("*", (req, res) => {
+  res.sendStatus(404);
+})
+
 
 module.exports = app;
