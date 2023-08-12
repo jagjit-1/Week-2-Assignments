@@ -43,10 +43,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require("path")
 const fs = require("fs");
+const cors = require("cors")
 
 const app = express();
 
 app.use(bodyParser.json());
+app.use(cors());
 
 
 app.get('/todos', (req, res) => {
@@ -54,7 +56,7 @@ app.get('/todos', (req, res) => {
     if (err) return res.sendStatus(500);
     let todos = []
     if (data.trim() !== "") todos = JSON.parse(data);
-    return res.status(200).send(todos);
+    return res.status(200).json(todos);
   })
 })
 
@@ -121,9 +123,16 @@ app.delete('/todos/:id', (req, res) => {
   })
 })
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "./index.html"));
+})
+
 app.use("*", (req, res) => {
   res.sendStatus(404);
 })
 
+app.listen(3000, () => {
+  console.log("eeya")
+})
 
 module.exports = app;

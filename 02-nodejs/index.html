@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Todo frontend</title>
+    <style>
+        .todo-container {
+            padding: 5px;
+            max-width: 50%;
+            border: 1px solid black;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .todo-heading {
+            align-self: center;
+        }
+
+        .button {
+            border: none;
+            border-radius: 5px;
+            width: 90px;
+            margin: 0 3px 0 3px;
+            padding: 6px 10px 6px 10px;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            font-size: 13px;
+        }
+
+        .safe {
+            background-color: #5cdb5c;
+            color: white;
+        }
+
+        .danger {
+            background-color: #ff0021;
+            color: white
+        }
+
+        .warning {
+            background-color: #ffa500;
+            color: white
+        }
+
+        #todo-form {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        #content {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            margin: auto;
+
+        }
+
+        .todo-items {
+            display: flex;
+            margin-top: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchTodo();
+        })
+        function createTodoElement(todo) {
+            const newDiv = document.createElement("div");
+            newDiv.classList.add("todo-items");
+            const childDiv = document.createElement("div");
+            childDiv.innerText = todo.title + " - " + todo.description;
+            const changeButton = document.createElement("button");
+            changeButton.classList.add("warning");
+            changeButton.classList.add("button");
+            const deleteButton = document.createElement("button");
+            deleteButton.classList.add("danger");
+            deleteButton.classList.add("button");
+            deleteButton.setAttribute("onclick", `deleteTodo(${todo.id})`);
+            changeButton.setAttribute("onclick", `updateTodo(${todo.id})`);
+            changeButton.innerText = "Change";
+            deleteButton.innerText = "Delete";
+            const buttonDiv = document.createElement("div");
+            buttonDiv.appendChild(changeButton);
+            buttonDiv.appendChild(deleteButton);
+            newDiv.appendChild(childDiv);
+            newDiv.appendChild(buttonDiv);
+            return newDiv
+        }
+
+        function addTodo(e) {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const formData = new FormData(form);
+            form.reset();
+            const formObj = Object.fromEntries(formData.entries());
+            const parsedForm = JSON.stringify(formObj);
+            fetch("http://localhost:3000/todos", { method: "POST", body: parsedForm, headers: { "Content-Type": "application/json" } }).then(res => {
+                console.log(res);
+                fetchTodo();
+            })
+        }
+
+        function deleteTodo(id) {
+            fetch(`http://localhost:3000/todos/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" } }).then(res => {
+                fetchTodo();
+            }).catch(err => console.log("Error occurred while deleting"));
+        }
+
+        function updateTodo() {
+            console.log("function not implemented");
+        }
+
+        function fetchTodo() {
+            fetch("http://localhost:3000/todos", { method: "GET", headers: { "Content-Type": "application/json" } }).then(res => {
+                res.json().then(todos => {
+                    const contentDiv = document.getElementById("content");
+                    contentDiv.innerHTML = "";
+                    todos.forEach(todo => {
+                        contentDiv.appendChild(createTodoElement(todo));
+                    })
+                })
+
+            })
+        }
+
+
+    </script>
+</head>
+
+<body>
+    <div class="todo-container">
+        <h1 class="todo-heading">Todo App</h1>
+        <form id="todo-form" onsubmit="addTodo(event)">
+            <div>
+                <label for="title">Todo Title</label>
+                <input name="title" type="text" />
+            </div>
+            <div>
+                <label for="description">Todo Description</label>
+                <input name="description" type="text" />
+            </div>
+            <button class="button safe" type="submit">Add</button>
+        </form>
+
+        <div id="content">
+
+        </div>
+    </div>
+
+</body>
+
+</html>
